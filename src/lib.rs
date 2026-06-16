@@ -23,8 +23,8 @@ impl Source for Novelfire {
 		_filters: Vec<FilterValue>,
 	) -> Result<MangaPageResult> {
 		let url = match query {
-			Some(q) => format!("{}/search?q={}&page={}", BASE_URL, q, page),
-			None => format!("{}/novels?page={}", BASE_URL, page),
+			Some(q) => format!("{}/search?searchword={}&page={}", BASE_URL, q, page),
+			None => format!("{}/genre-all/sort-new/status-all/all-novel?page={}", BASE_URL, page),
 		};
 		parse_manga_list(&url)
 	}
@@ -38,7 +38,7 @@ impl Source for Novelfire {
 		if !needs_details && !needs_chapters {
 			return Ok(manga);
 		}
-		let url = format!("{}{}", BASE_URL, manga.key); // .id → .key
+		let url = format!("{}{}", BASE_URL, manga.key);
 		let html = Request::get(&url)?.html()?;
 		let mut m = manga;
 		if needs_details {
@@ -49,21 +49,20 @@ impl Source for Novelfire {
 				m.description = Some(desc);
 			}
 			if let Some(cover) = html.select_first("figure.novel-cover img").and_then(|e| e.attr("abs:src")) {
-				m.cover = Some(cover); // .cover_url → .cover
+				m.cover = Some(cover);
 			}
 		}
 		Ok(m)
 	}
 
 	fn get_page_list(&self, _manga: Manga, chapter: Chapter) -> Result<Vec<Page>> {
-		let url = format!("{}{}", BASE_URL, chapter.key); // .id → .key
+		let url = format!("{}{}", BASE_URL, chapter.key);
 		let html = Request::get(&url)?.html()?;
 		let content = html
 			.select_first(".chapter-content")
 			.and_then(|e| e.html())
 			.unwrap_or_default();
 		Ok(Vec::from([Page {
-			// removed `index` field — not present on aidoku::Page
 			content: aidoku::PageContent::Text(content),
 			..Default::default()
 		}]))
@@ -72,7 +71,7 @@ impl Source for Novelfire {
 
 impl ListingProvider for Novelfire {
 	fn get_manga_list(&self, _listing: Listing, page: i32) -> Result<MangaPageResult> {
-		let url = format!("{}/novels?page={}", BASE_URL, page);
+		let url = format!("{}/genre-all/sort-new/status-all/all-novel?page={}", BASE_URL, page);
 		parse_manga_list(&url)
 	}
 }
@@ -80,14 +79,14 @@ impl ListingProvider for Novelfire {
 fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 	let html = Request::get(url)?.html()?;
 	let mut entries = Vec::new();
-	if let Some(items) = html.select("li.novel-item") {
+	if let Some(items) = html.select("li a[href*='/book/']") {
 		for item in items {
-			let title = item.select_first("a").and_then(|e| e.attr("title")).unwrap_or_default();
-			let key = item.select_first("a").and_then(|e| e.attr("href")).unwrap_or_default();
-			let cover = item.select_first("figure.novel-cover img").and_then(|e| e.attr("abs:src")).unwrap_or_default();
-			if !key.is_empty() {
+			let title = item.attr("title").unwrap_or_default();
+			let key = item.attr("href").unwrap_or_default();
+			let cover = item.select_first("img").and_then(|e| e.attr("src")).unwrap_or_default();
+			if !key.is_empty() && !title.is_empty() {
 				entries.push(Manga {
-					key,          // was `id`
+					key,
 					title,
 					cover: Some(cover),
 					..Default::default()
@@ -95,7 +94,7 @@ fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 			}
 		}
 	}
-	Ok(MangaPageResult { entries, has_next_page: true }) // `manga` → `entries`
+	Ok(MangaPageResult { entries, has_next_page: true })
 }
 
 impl Home for Novelfire {

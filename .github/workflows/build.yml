@@ -22,8 +22,7 @@ jobs:
       - name: Build package
         run: |
           aidoku package
-          find . -name "*.aip" -o -name "*.zip" | head -20
-          ls -la
+          aidoku build package.aix
          
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

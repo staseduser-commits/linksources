@@ -63,7 +63,7 @@ impl Source for Novelfire {
 					if !key.is_empty() {
 						chapters.push(Chapter {
 							key,
-							title,
+							title: Some(title),
 							..Default::default()
 						});
 					}

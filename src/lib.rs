@@ -100,7 +100,7 @@ fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 
 impl Home for Novelfire {
 	fn get_home(&self) -> Result<HomeLayout> {
-		Ok(HomeLayout { layouts: Vec::new()
+		Ok(HomeLayout { layouts: Vec::new() })
 	}
 }
 

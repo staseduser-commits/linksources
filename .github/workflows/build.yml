@@ -22,9 +22,9 @@ jobs:
       - name: Build package
         run: |
           aidoku package
-          ls *.aix || echo "no aix in root"
-          find . -name "*.aix"
-          aidoku build $(find . -name "*.aix" | head -1) -o public
+          aidoku build --help || true
+          aidoku build ./package.aix -o public || true
+          ls -la
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

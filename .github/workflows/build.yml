@@ -23,7 +23,9 @@ jobs:
         run: |
           aidoku package
           aidoku build package.aix -o public
-         
+          ls -la
+          ls -la public || echo "no public folder"
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

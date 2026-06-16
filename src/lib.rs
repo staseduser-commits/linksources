@@ -53,21 +53,30 @@ impl Source for Novelfire {
 			}
 		}
 		if needs_chapters {
-			let chapters_url = format!("{}{}/chapters", BASE_URL, manga.key);
-			let chapters_html = Request::get(&chapters_url)?.html()?;
 			let mut chapters = Vec::new();
-			if let Some(items) = chapters_html.select("li a[href*='/chapter-']") {
-				for item in items {
-					let key = item.attr("href").unwrap_or_default();
-					let title = item.attr("title").unwrap_or_default();
-					if !key.is_empty() {
-						chapters.push(Chapter {
-							key,
-							title: Some(title),
-							..Default::default()
-						});
+			let mut page = 1;
+			loop {
+				let chapters_url = format!("{}{}/chapters?page={}", BASE_URL, manga.key, page);
+				let chapters_html = Request::get(&chapters_url)?.html()?;
+				let mut found = false;
+				if let Some(items) = chapters_html.select("li a[href*='/chapter-']") {
+					for item in items {
+						let key = item.attr("href").unwrap_or_default();
+						let title = item.attr("title").unwrap_or_default();
+						if !key.is_empty() {
+							chapters.push(Chapter {
+								key,
+								title: Some(title),
+								..Default::default()
+							});
+							found = true;
+						}
 					}
 				}
+				if !found {
+					break;
+				}
+				page += 1;
 			}
 			m.chapters = Some(chapters);
 		}
@@ -79,7 +88,7 @@ impl Source for Novelfire {
 		let html = Request::get(&url)?.html()?;
 		let content = html
 			.select_first("#content")
-			.and_then(|e| e.html())
+			.and_then(|e| e.text())
 			.unwrap_or_default();
 		Ok(Vec::from([Page {
 			content: aidoku::PageContent::Text(content),

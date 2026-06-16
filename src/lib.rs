@@ -78,10 +78,9 @@ impl Source for Novelfire {
 		let url = format!("{}{}", BASE_URL, chapter.key);
 		let html = Request::get(&url)?.html()?;
 		let content = html
-    		    .select_first("div.chapter-c")
-    		    .or_else(|| html.select_first("main"))
-                    .and_then(|e| e.html())
-                    .unwrap_or_default();
+			.select_first("#content")
+			.and_then(|e| e.html())
+			.unwrap_or_default();
 		Ok(Vec::from([Page {
 			content: aidoku::PageContent::Text(content),
 			..Default::default()

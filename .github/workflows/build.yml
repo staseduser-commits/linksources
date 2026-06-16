@@ -17,10 +17,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install aidoku-cli
-        run: |
-          git clone https://github.com/Aidoku/aidoku-cli
-          cd aidoku-cli
-          cargo install --path .
+        run: cargo install --git https://github.com/Aidoku/aidoku-rs aidoku-cli
 
       - name: Build package
         run: aidoku package
@@ -29,4 +26,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+            publish_dir: ./public

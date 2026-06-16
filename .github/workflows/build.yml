@@ -17,7 +17,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install aidoku-cli
-        run: cargo install aidoku-cli
+        run: cargo install --git https://github.com/Aidoku/aidoku-cli aidoku-cli
 
       - name: Build package
         run: aidoku package

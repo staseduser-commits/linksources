@@ -40,17 +40,36 @@ impl Source for Novelfire {
 		}
 		let url = format!("{}{}", BASE_URL, manga.key);
 		let html = Request::get(&url)?.html()?;
-		let mut m = manga;
+		let mut m = manga.clone();
 		if needs_details {
-			if let Some(title) = html.select_first("h1.novel-title").and_then(|e| e.text()) {
+			if let Some(title) = html.select_first("h1").and_then(|e| e.text()) {
 				m.title = title;
 			}
 			if let Some(desc) = html.select_first(".summary").and_then(|e| e.text()) {
 				m.description = Some(desc);
 			}
-			if let Some(cover) = html.select_first("figure.novel-cover img").and_then(|e| e.attr("abs:src")) {
+			if let Some(cover) = html.select_first("figure.cover img").and_then(|e| e.attr("src")) {
 				m.cover = Some(cover);
 			}
+		}
+		if needs_chapters {
+			let chapters_url = format!("{}{}chapters", BASE_URL, manga.key);
+			let chapters_html = Request::get(&chapters_url)?.html()?;
+			let mut chapters = Vec::new();
+			if let Some(items) = chapters_html.select("ul li a") {
+				for item in items {
+					let key = item.attr("href").unwrap_or_default();
+					let title = item.attr("title").unwrap_or_default();
+					if !key.is_empty() {
+						chapters.push(Chapter {
+							key,
+							title,
+							..Default::default()
+						});
+					}
+				}
+			}
+			m.chapters = Some(chapters);
 		}
 		Ok(m)
 	}

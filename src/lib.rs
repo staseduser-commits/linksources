@@ -53,7 +53,7 @@ impl Source for Novelfire {
 			}
 		}
 		if needs_chapters {
-			let chapters_url = format!("{}{}chapters", BASE_URL, manga.key);
+			let chapters_url = format!("{}{}/chapters", BASE_URL, manga.key);
 			let chapters_html = Request::get(&chapters_url)?.html()?;
 			let mut chapters = Vec::new();
 			if let Some(items) = chapters_html.select("li a[href*='/chapter-']") {

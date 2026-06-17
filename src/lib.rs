@@ -128,7 +128,14 @@ fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 
 impl Home for Novelfire {
 	fn get_home(&self) -> Result<HomeLayout> {
-		Ok(HomeLayout { components: Vec::new() })
+		Ok(HomeLayout {
+			components: Vec::from([
+				aidoku::HomeComponent::Listing(Listing {
+					key: String::from("default"),
+					name: String::from("Latest Novels"),
+				})
+			])
+		})
 	}
 }
 

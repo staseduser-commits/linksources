@@ -115,24 +115,15 @@ impl ListingProvider for Lightnovelworld {
 fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 	let html = Request::get(url)?.html()?;
 	let mut entries = Vec::new();
-	if let Some(items) = html.select("a[href*='/novel/']") {
+	if let Some(items) = html.select("h3 a[href*='/novel/']") {
 		for item in items {
-			let title = item.attr("title").unwrap_or_default();
+			let title = item.text().unwrap_or_default();
 			let key = item.attr("href").unwrap_or_default();
-			let cover = item.select_first("img").and_then(|e| {
-				e.attr("data-src").or_else(|| e.attr("src")).map(|src| {
-					if src.starts_with("http") {
-						src
-					} else {
-						format!("{}{}", BASE_URL, src)
-					}
-				})
-			}).unwrap_or_default();
 			if !key.is_empty() && !title.is_empty() {
 				entries.push(Manga {
 					key,
 					title,
-					cover: Some(cover),
+					cover: Some(String::new()),
 					..Default::default()
 				});
 			}

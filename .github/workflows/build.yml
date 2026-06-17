@@ -24,11 +24,16 @@ jobs:
       - name: Install aidoku-cli
         run: cargo install --git https://github.com/Aidoku/aidoku-rs aidoku-cli
 
-      - name: Build package
+      - name: Build sources
         run: |
-          aidoku package
+          for dir in sources/*/; do
+            echo "Building $dir"
+            cd "$dir"
+            aidoku package
+            cd ../..
+          done
           mkdir -p public
-          aidoku build ./package.aix -o public
+          aidoku build $(find sources -name "*.aix") -o public
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

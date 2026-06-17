@@ -48,7 +48,7 @@ impl Source for Novelfire {
 			if let Some(desc) = html.select_first(".summary").and_then(|e| e.text()) {
 				m.description = Some(desc);
 			}
-			if let Some(cover) = html.select_first("figure.cover img").and_then(|e| e.attr("abs:src")) {
+			if let Some(cover) = html.select_first("figure.cover img").and_then(|e| e.attr("src")).map(|src| format!("{}{}", BASE_URL, src)) {
 				m.cover = Some(cover);
 			}
 		}
@@ -112,7 +112,7 @@ fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 		for item in items {
 			let title = item.attr("title").unwrap_or_default();
 			let key = item.attr("href").unwrap_or_default();
-			let cover = item.select_first("img").and_then(|e| e.attr("abs:src")).unwrap_or_default();
+			let cover = item.select_first("img").and_then(|e| e.attr("src")).map(|src| format!("{}{}", BASE_URL, src)).unwrap_or_default();
 			if !key.is_empty() && !title.is_empty() {
 				entries.push(Manga {
 					key,

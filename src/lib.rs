@@ -49,7 +49,7 @@ impl Source for Novelfire {
 				m.description = Some(desc);
 			}
 			if let Some(cover) = html.select_first("figure.cover img").and_then(|e| {
-				e.attr("src").map(|src| {
+				e.attr("data-src").or_else(|| e.attr("src")).map(|src| {
 					if src.starts_with("http") {
 						src
 					} else {
@@ -120,8 +120,8 @@ fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 		for item in items {
 			let title = item.attr("title").unwrap_or_default();
 			let key = item.attr("href").unwrap_or_default();
-			let cover = item.select_first("img.src").and_then(|e| {
-				e.attr("src").map(|src| {
+			let cover = item.select_first("img").and_then(|e| {
+				e.attr("data-src").or_else(|| e.attr("src")).map(|src| {
 					if src.starts_with("http") {
 						src
 					} else {

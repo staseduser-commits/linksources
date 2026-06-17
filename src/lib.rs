@@ -1,6 +1,6 @@
 #![no_std]
 use aidoku::{
-	AidokuError, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Home, HomeLayout, Listing,
+	AidokuError, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Listing,
 	ListingProvider, Manga, MangaPageResult, Page, Result, Source,
 	alloc::{String, Vec, format},
 	imports::net::Request,
@@ -126,23 +126,10 @@ fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 	Ok(MangaPageResult { entries, has_next_page: true })
 }
 
-impl Home for Novelfire {
-	fn get_home(&self) -> Result<HomeLayout> {
-		Ok(HomeLayout {
-			components: Vec::from([
-				aidoku::HomeComponent::Listing(Listing {
-					key: String::from("default"),
-					name: String::from("Latest Novels"),
-				})
-			])
-		})
-	}
-}
-
 impl DeepLinkHandler for Novelfire {
 	fn handle_deep_link(&self, _url: String) -> Result<Option<DeepLinkResult>> {
 		Err(AidokuError::Unimplemented)
 	}
 }
 
-register_source!(Novelfire, ListingProvider, Home, DeepLinkHandler);
+register_source!(Novelfire, ListingProvider, DeepLinkHandler);

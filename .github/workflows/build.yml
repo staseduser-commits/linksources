@@ -26,12 +26,8 @@ jobs:
 
       - name: Build sources
         run: |
-          for dir in sources/*/; do
-            echo "Building $dir"
-            cd "$dir"
-            aidoku package
-            cd ../..
-          done
+          cd sources/en.novelfire && aidoku package && cd ../..
+          cd sources/en.lightnovelworld && aidoku package && cd ../..
           mkdir -p public
           aidoku build $(find sources -name "*.aix") -o public
 

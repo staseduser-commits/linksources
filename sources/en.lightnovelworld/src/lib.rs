@@ -115,7 +115,7 @@ impl ListingProvider for Lightnovelworld {
 fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 	let html = Request::get(url)?.html()?;
 	let mut entries = Vec::new();
-	if let Some(items) = html.select("li.novel-item a") {
+	if let Some(items) = html.select("a[href*='/novel/']") {
 		for item in items {
 			let title = item.attr("title").unwrap_or_default();
 			let key = item.attr("href").unwrap_or_default();

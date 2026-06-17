@@ -16,23 +16,28 @@ impl Source for Novelfire {
 		Self
 	}
 
-fn get_search_manga_list(
-	&self,
-	query: Option<String>,
-	page: i32,
-	_filters: Vec<FilterValue>,
-) -> Result<MangaPageResult> {
-	let url = match query {
-		Some(q) if !q.is_empty() => {
-			let mut params = QueryParameters::new();
-			params.push("searchword", Some(&q));
-			params.push("page", Some(&page.to_string()));
-			format!("{}/search?{}", BASE_URL, params)
+	fn get_search_manga_list(
+		&self,
+		query: Option<String>,
+		page: i32,
+		_filters: Vec<FilterValue>,
+	) -> Result<MangaPageResult> {
+		match query {
+			Some(ref q) if !q.is_empty() => {
+				let mut params = QueryParameters::new();
+				params.push("searchword", Some(q));
+				params.push("page", Some(&page.to_string()));
+				let url = format!("{}/search?{}", BASE_URL, params);
+				parse_search_results(&url)
+			}
+			_ => {
+				let url = format!("{}/genre-all/sort-new/status-all/all-novel?page={}", BASE_URL, page);
+				parse_manga_list(&url)
+			}
 		}
-		_ => format!("{}/genre-all/sort-new/status-all/all-novel?page={}", BASE_URL, page),
-	};
-	parse_manga_list(&url)
-}	fn get_manga_update(
+	}
+
+	fn get_manga_update(
 		&self,
 		manga: Manga,
 		needs_details: bool,
@@ -143,6 +148,88 @@ fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 		}
 	}
 	Ok(MangaPageResult { entries, has_next_page: true })
+}
+
+fn parse_search_results(url: &str) -> Result<MangaPageResult> {
+	let html = Request::get(url)?.html()?;
+	let mut entries = Vec::new();
+
+	// Try the most common NovelFire search result containers
+	let selectors = [
+		".ss-custom-item",
+		".list-novel .row",
+		".search-item",
+		".archive-item",
+	];
+
+	'outer: for selector in &selectors {
+		if let Some(items) = html.select(selector) {
+			for item in items {
+				if let Some(a) = item.select_first("a[href*='/book/']") {
+					let key = a.attr("href").unwrap_or_default();
+					let title = a.attr("title")
+						.or_else(|| {
+							item.select_first("h3, h4, .novel-title, .title")
+								.and_then(|e| e.text())
+						})
+						.unwrap_or_default();
+					let cover = item.select_first("img").and_then(|e| {
+						e.attr("data-src").or_else(|| e.attr("src")).map(|src| {
+							if src.starts_with("http") {
+								src
+							} else {
+								format!("{}{}", BASE_URL, src)
+							}
+						})
+					}).unwrap_or_default();
+
+					if !key.is_empty() && !title.is_empty() {
+						entries.push(Manga {
+							key,
+							title,
+							cover: Some(cover),
+							..Default::default()
+						});
+					}
+				}
+			}
+			// If we found results with this selector, stop trying others
+			if !entries.is_empty() {
+				break 'outer;
+			}
+		}
+	}
+
+	// Fallback: if no results found with specific selectors, try the generic book link selector
+	if entries.is_empty() {
+		if let Some(items) = html.select("a[href*='/book/']") {
+			for item in items {
+				let key = item.attr("href").unwrap_or_default();
+				let title = item.attr("title").unwrap_or_default();
+				let cover = item.select_first("img").and_then(|e| {
+					e.attr("data-src").or_else(|| e.attr("src")).map(|src| {
+						if src.starts_with("http") {
+							src
+						} else {
+							format!("{}{}", BASE_URL, src)
+						}
+					})
+				}).unwrap_or_default();
+
+				if !key.is_empty() && !title.is_empty() {
+					entries.push(Manga {
+						key,
+						title,
+						cover: Some(cover),
+						..Default::default()
+					});
+				}
+			}
+		}
+	}
+
+	let has_next = !entries.is_empty();
+	Ok(MangaPageResult { entries, has_next_page: has_next })
 }
 
 impl DeepLinkHandler for Novelfire {

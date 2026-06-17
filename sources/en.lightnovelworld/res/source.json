@@ -1,10 +1,12 @@
 {
-    "info": {
-        "id": "en.lightnovelworld",
-        "lang": "en",
-        "name": "Light Novel World",
-        "version": 1,
-        "url": "https://lightnovelworld.org",
-        "nsfw": 0
-    }
+        "info": {
+                "id": "en.lightnovelworld",
+                "name": "Light Novel World",
+                "version": 1,
+                "url": "https://lightnovelworld.org/",
+                "contentRating": 1,
+                "languages": [
+                        "en"
+                ]
+        }
 }

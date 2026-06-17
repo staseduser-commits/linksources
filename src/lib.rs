@@ -120,7 +120,7 @@ fn parse_manga_list(url: &str) -> Result<MangaPageResult> {
 		for item in items {
 			let title = item.attr("title").unwrap_or_default();
 			let key = item.attr("href").unwrap_or_default();
-			let cover = item.select_first("img").and_then(|e| {
+			let cover = item.select_first("img.src").and_then(|e| {
 				e.attr("src").map(|src| {
 					if src.starts_with("http") {
 						src

@@ -1,8 +1,8 @@
-#![no_std]
 use aidoku::{
 	AidokuError, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Listing,
 	ListingProvider, Manga, MangaPageResult, Page, Result, Source,
 	alloc::{String, Vec, format},
+	helpers::uri::QueryParameters,
 	imports::net::Request,
 	prelude::*,
 };
@@ -16,20 +16,23 @@ impl Source for Novelfire {
 		Self
 	}
 
-	fn get_search_manga_list(
-		&self,
-		query: Option<String>,
-		page: i32,
-		_filters: Vec<FilterValue>,
-	) -> Result<MangaPageResult> {
-		let url = match query {
-			Some(q) => format!("{}/search?searchword={}&page={}", BASE_URL, q, page),
-			None => format!("{}/genre-all/sort-new/status-all/all-novel?page={}", BASE_URL, page),
-		};
-		parse_manga_list(&url)
-	}
-
-	fn get_manga_update(
+fn get_search_manga_list(
+	&self,
+	query: Option<String>,
+	page: i32,
+	_filters: Vec<FilterValue>,
+) -> Result<MangaPageResult> {
+	let url = match query {
+		Some(q) if !q.is_empty() => {
+			let mut params = QueryParameters::new();
+			params.push("searchword", Some(&q));
+			params.push("page", Some(&page.to_string()));
+			format!("{}/search?{}", BASE_URL, params)
+		}
+		_ => format!("{}/genre-all/sort-new/status-all/all-novel?page={}", BASE_URL, page),
+	};
+	parse_manga_list(&url)
+}	fn get_manga_update(
 		&self,
 		manga: Manga,
 		needs_details: bool,
